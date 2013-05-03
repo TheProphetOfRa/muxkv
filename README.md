@@ -1,7 +1,7 @@
-mkvconvert
+muxkv
 ==========
 
-mkvconvert is a command line wrapper for mkvextract, ffmpeg and sublerCLI.
+muxkv is a command line wrapper for mkvextract, ffmpeg and sublerCLI.
 
 It will pass the video track through and convert the audio from ac3 to aac. 
 
@@ -20,14 +20,14 @@ ffmpef is also available through homebrew with "brew install ffmpeg" though can
 be found at http://www.evermeet.cx/ffmpeg/
 
 Once these programs have been installed this script can be downloaded through
-git with "git clone https://github.com/TheProphetOfRa/mkvconvert.git" and then
+git with "git clone https://github.com/TheProphetOfRa/muxkv.git" and then
 added to your system path like the above.
 
 Usage:
 ------
 
 Open a terminal in the directory containing the file you wish to remux and
-enter the command: "mkvconvert <source-file.mkv> <destination-file>"
+enter the command: "muxkv <source-file.mkv> <destination-file>"
 
 The script will create and delete several files as it runs and output some text
 to your console.
