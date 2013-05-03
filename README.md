@@ -32,7 +32,7 @@ enter the command: "muxkv 'source-file.mkv' 'destination-file'"
 The script will create and delete several files as it runs and output some text
 to your console.
 
-Once the file script has completed it will display "Done." and there will be
+Once the script has completed it will display "Done." and there will be
 a file marked <destination-file>.mp4 in the folder.
 
 During the "Merging the resulting audio and video." stage it may display "Error
