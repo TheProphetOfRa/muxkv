@@ -27,7 +27,7 @@ Usage:
 ------
 
 Open a terminal in the directory containing the file you wish to remux and
-enter the command: "muxkv <source-file.mkv> <destination-file>"
+enter the command: "muxkv 'source-file.mkv' 'destination-file'"
 
 The script will create and delete several files as it runs and output some text
 to your console.
