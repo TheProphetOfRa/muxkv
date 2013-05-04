@@ -1,7 +1,7 @@
 muxkv
 ==========
 
-muxkv is a command line wrapper for mkvextract, ffmpeg and sublerCLI.
+muxkv is a command line wrapper for mkvextract, ffmpeg and sublerCLI on OS X.
 
 It will pass the video track through and convert the audio from ac3 to aac. 
 
