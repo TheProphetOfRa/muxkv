@@ -1,48 +1,109 @@
 #! /bin/sh
 
-#check there is a vali first argument
+SOURCE=
+DESTINATION=
+
+function extract {
+
+    #Echo step 1 - extraction
+    echo "Extracting audio and video from matroska file."
+
+    #rip the audio and video from the mkv
+    mkvextract tracks $SOURCE -q 1:video.264 2:audio.ac3
+
+}
+
+function convertAudio {
+
+    #Echo step 2 - conversion
+    echo "Converting audio stream from ac3 to aac, this can take a few minutes."
+
+    #convert the audio to aac
+    ffmpeg -loglevel error -i audio.ac3 audio.aac
+
+}
+
+function merge {
+
+    #Echo step 3 - merge
+    echo "Merging the resulting audio and video."
+
+    #merge the files
+    sublerCLI -dest $DESTINATION.mp4 -source video.264 > /dev/null
+    sublerCLI -dest $DESTINATION.mp4 -source audio.aac > /dev/null
+
+}
+
+function cleanup {
+
+    #Echo cleanup
+    echo "Cleaning up."
+
+    #cleanup
+    rm audio.ac3
+    rm audio.aac
+    rm video.264
+
+}
+
+function usage {
+
+    #print the usage of the script to the console
+    echo "usage: muxkv [[[-s source-file] [-d destination-file-name]] | [-h help]]"
+
+}
+
+#####MAIN
+
+#Checks to make sure arguments have been supplied
 if [ "$1" = "" ]
-then
-    echo "No source file specified. Please specify your source file."
-    exit -1
+then 
+    usage
+    exit 1
 fi
 
-#check there is a valid second argument
-if [ "$2" = "" ]
-then
-    echo "No destination supplied please specify a destination file name."
-    exit -1
-fi
+#read the rest of the arguments
+while [ "$1" != "" ]; do
+
+    case $1 in
+
+        -s | --source )         shift
+                                SOURCE="$1"
+                                echo $SOURCE
+                                ;;
+        -d | --destination )    shift
+                                DESTINATION=$1
+                                echo $DESTINATION
+                                ;;
+        -h | --help )           usage
+                                exit
+                                ;;
+        * )                     usage
+                                exit 1
+    esac
+
+    shift
+
+done 
+                            
 
 #Echo description of conversion
-echo "Converting "$1" to "$2".mp4"
+echo "Converting $SOURCE to $DESTINATION.mp4"
 
-#Echo step 1 - extraction
-echo "Extracting audio and video from matroska file."
+#extract streams
+extract
 
-#rip the audio and video from the mkv
-mkvextract tracks "$1" -q 1:video.264 2:audio.ac3
+#convert the audio
+convertAudio
 
-#Echo step 2 - conversion
-echo "Converting audio stream from ac3 to aac, this can take a few minutes."
+#merge the new audio and video to the .mp4
+merge
 
-#convert the audio to aac
-ffmpeg -loglevel error -i audio.ac3 audio.aac
-
-#Echo step 3 - merge
-echo "Merging the resulting audio and video."
-
-#merge the files
-sublerCLI -dest "$2".mp4 -source video.264 > /dev/null
-sublerCLI -dest "$2".mp4 -source audio.aac > /dev/null
-
-#Echo cleanup
-echo "Cleaning up."
-
-#cleanup
-rm audio.ac3
-rm audio.aac
-rm video.264
+#cleanup temp files
+cleanup 
 
 #Echo done
 echo "Done."
+
+
+
