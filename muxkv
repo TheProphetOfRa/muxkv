@@ -80,6 +80,7 @@ function getInfo {
     fi
 
     #cleanup temp files
+    rm info.txt
     rm ids.txt
     rm types.txt
     rm codecs.txt
