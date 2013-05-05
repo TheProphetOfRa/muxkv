@@ -3,10 +3,93 @@
 SOURCE=
 DESTINATION=
 
+AUDIOID=
+VIDEOID=
+
+AUDIOCODEC=
+VIDEOCODEC=
+
+function getInfo {
+
+    #local variables to hold stream information
+    local types=
+    local codecs=
+    local ids=
+
+    #Echo pre-conversion information gathering
+    printf "Acquiring stream information from mkv.\n"
+
+    #get the information
+    mkvinfo $SOURCE > info.txt 
+    
+    #parse the output for the track numbers
+    ids=$(grep '|  + Track number:' info.txt)
+
+    #print the track numbers to a file
+    echo $ids > ids.txt
+
+    #parse that output for the track numbers
+    ids=$(grep -o '[0-9]' ids.txt)
+
+    #separate the numbers into individual variables
+    local idArray=(${ids//\ / })
+
+    #parse the output for the track types
+    types=$(grep '|  + Track type:' info.txt)
+
+    #print the track types to a file
+    echo $types > types.txt
+
+    #parse that file for the type
+    types=$(grep -o 'video\|audio' types.txt)
+
+    #separate the types to individual variables
+    local typeArray=(${types//\ / })
+
+    #parse the output for the codecs
+    codecs=$(grep '|  + Codec ID:' info.txt)
+
+    #print the codecs to a file
+    echo $codecs > codecs.txt
+
+    #parse the file for the codec
+    #get rid of unwanted text
+    codecs=${codecs#|*+*Codec*ID:}
+
+    #separate based on spaces
+    local codecArray=(${codecs//\ / })
+
+    #assign the actual codec to the second positon
+    length=${#codecArray[@]}
+    lastPos=$((length-1))
+    codecArray[1]=${codecArray[${lastPos}]}
+
+    #check if the video stream is first or the audio
+    if [ ${typeArray[0]} = "video" ]
+    then
+        #save the ids and codecs to the global variables
+        VIDEOID=0
+        AUDIOID=1
+        VIDEOCODEC=${codecArray[0]}
+        AUDIOCODEC=${codecArray[1]}
+    else
+        VIDEOID=1
+        AUDIOID=0
+        VIDEOCODEC=${codecArray[1]}
+        AUDIOCODEC=${codecArray[0]}
+    fi
+
+    #cleanup temp files
+    rm ids.txt
+    rm types.txt
+    rm codecs.txt
+
+}
+
 function extract {
 
     #Echo step 1 - extraction
-    echo "Extracting audio and video from matroska file."
+    printf "Extracting audio and video from matroska file.\n"
 
     #rip the audio and video from the mkv
     mkvextract tracks $SOURCE -q 1:video.264 2:audio.ac3
@@ -16,7 +99,7 @@ function extract {
 function convertAudio {
 
     #Echo step 2 - conversion
-    echo "Converting audio stream from ac3 to aac, this can take a few minutes."
+    printf "Converting audio stream from ac3 to aac, this can take a few minutes.\n"
 
     #convert the audio to aac
     ffmpeg -loglevel error -i audio.ac3 audio.aac
@@ -26,7 +109,7 @@ function convertAudio {
 function merge {
 
     #Echo step 3 - merge
-    echo "Merging the resulting audio and video."
+    printf "Merging the resulting audio and video.\n"
 
     #merge the files
     sublerCLI -dest $DESTINATION.mp4 -source video.264 > /dev/null
@@ -37,7 +120,7 @@ function merge {
 function cleanup {
 
     #Echo cleanup
-    echo "Cleaning up."
+    printf "Cleaning up.\n"
 
     #cleanup
     rm audio.ac3
@@ -49,7 +132,7 @@ function cleanup {
 function usage {
 
     #print the usage of the script to the console
-    echo "usage: muxkv [[[-s source-file] [-d destination-file-name]] | [-h help]]"
+    printf "usage: muxkv [[[-s source-file] [-d destination-file-name]] | [-h help]]\n"
 
 }
 
@@ -69,11 +152,9 @@ while [ "$1" != "" ]; do
 
         -s | --source )         shift
                                 SOURCE="$1"
-                                echo $SOURCE
                                 ;;
         -d | --destination )    shift
                                 DESTINATION=$1
-                                echo $DESTINATION
                                 ;;
         -h | --help )           usage
                                 exit
@@ -88,7 +169,10 @@ done
                             
 
 #Echo description of conversion
-echo "Converting $SOURCE to $DESTINATION.mp4"
+printf "Converting $SOURCE to $DESTINATION.mp4\n"
+
+#get the stream insformation from the mkv
+getInfo
 
 #extract streams
 extract
@@ -103,7 +187,7 @@ merge
 cleanup 
 
 #Echo done
-echo "Done."
+printf "Done.\n"
 
 
 
