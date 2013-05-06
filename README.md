@@ -29,6 +29,9 @@ Usage:
 Open a terminal in the directory containing the file you wish to remux and
 enter the command: "muxkv -s 'source-file.mkv' -d 'destination-file'"
 
+The -i or --interactive flag specifies interactive mode which will ask for
+direction based on the codecs found in the mkv file
+
 The -s or --source flag specifies the path for the source mkv file.
 
 The -d or --destination flag specifies the desired name of the resultant file.
@@ -43,3 +46,9 @@ During the "Merging the resulting audio and video." stage it may display "Error
 decoding sei message". This message will not impact upon the playability of the
 final file and is something to do with the frame packing of the h.264 video
 file.
+
+Thanks:
+-------
+
+Jamwillinob for supplying the regular expressions used in parsing mkvinfo
+output.
