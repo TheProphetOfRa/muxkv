@@ -60,21 +60,19 @@ function getInfo {
     local codecArray=(${codecs//\ / })
 
     #assign the actual codec to the second positon
-    length=${#codecArray[@]}
-    lastPos=$((length-1))
-    codecArray[1]=${codecArray[${lastPos}]}
+    codecArray[1]=${codecArray[5]}
 
     #check if the video stream is first or the audio
     if [ ${typeArray[0]} = "video" ]
     then
         #save the ids and codecs to the global variables
-        VIDEOID=0
-        AUDIOID=1
+        VIDEOID=1
+        AUDIOID=2
         VIDEOCODEC=${codecArray[0]}
         AUDIOCODEC=${codecArray[1]}
     else
-        VIDEOID=1
-        AUDIOID=0
+        VIDEOID=2
+        AUDIOID=1
         VIDEOCODEC=${codecArray[1]}
         AUDIOCODEC=${codecArray[0]}
     fi
@@ -93,7 +91,7 @@ function extract {
     printf "Extracting audio and video from matroska file.\n"
 
     #rip the audio and video from the mkv
-    mkvextract tracks $SOURCE -q 1:video.264 2:audio.ac3
+    mkvextract tracks $SOURCE -q $VIDEOID:video.264 $AUDIOID:audio.ac3
 
 }
 
@@ -130,10 +128,24 @@ function cleanup {
 
 }
 
+function passthrough {
+
+    extract
+
+    mv audio.ac3 audio.aac
+
+    merge
+
+    cleanup
+
+    exit
+
+}
+
 function usage {
 
     #print the usage of the script to the console
-    printf "usage: muxkv [[[-s source-file] [-d destination-file-name]] | [-h help]]\n"
+    echo "usage: muxkv [-i interactive] [-s source-file-path] [-d destination-file-name] [-h help]"
 
 }
 
@@ -149,8 +161,11 @@ fi
 #read the rest of the arguments
 while [ "$1" != "" ]; do
 
-    case $1 in
+    case $1 in 
 
+        -i | --interactive )    shift
+                                interactive=true
+                                ;;
         -s | --source )         shift
                                 SOURCE="$1"
                                 ;;
@@ -174,6 +189,36 @@ printf "Converting $SOURCE to $DESTINATION.mp4\n"
 
 #get the stream insformation from the mkv
 getInfo
+
+
+
+if [ "$interactive" = 'true' ] 
+then
+
+    echo "Video Codec = " $VIDEOCODEC
+    echo "Audio Codec = " $AUDIOCODEC
+    echo "> If the video codec is not V_MPEG4/ISO/AVC or other .mp4 compliant codec then this file needs completely transcoded please press a to abort."
+    echo "> If the video codec is compliant and the audio codec is also compliant the this file can be done on passthrough. Press p to do so."
+    echo "> If the audio codec is anything other than A_AC3 then please press a to abort and transcode the file."
+    echo "> If the video codec is compliant and the audio codec is A_AC3 (likely) press c to continue."
+
+    read -e -p "> " action
+
+else
+    
+    action='c'
+
+
+fi
+
+case $action in 
+
+    a )     exit
+            ;;
+    p )     passthrough
+            ;;
+
+esac
 
 #extract streams
 extract
